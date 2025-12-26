@@ -1,4 +1,5 @@
-### I would like to retire from maintaining this project. As much as I've enjoyed working on this, I have lost interest as of late and no longer use Stable Diffusion WebUI. If anyone would like to take over, please feel free to fork this project.
+## Welcome!
+I returned to using StableDiffusion and always liked this extension, however I noticed it had some issues and I decided to fork the version I had been using and through the power of boredom and Claude AI I've fixed some issues and will be adding some more functions.
 
 **[Contributors](https://github.com/zixaphir/Stable-Diffusion-Webui-Civitai-Helper/graphs/contributors)**
 
