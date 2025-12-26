@@ -352,6 +352,148 @@ blockquote ol {
     padding: 10px;
 }
 
+/* Version check table styling */
+.ch_version_section {
+    margin-bottom: 30px;
+}
+
+.ch_version_section h1 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color-primary);
+    color: var(--body-text-color);
+}
+
+.ch_version_table_wrapper {
+    margin-bottom: 25px;
+    background: var(--background-fill-secondary, #f9f9f9);
+    border: 1px solid var(--border-color-primary, #ddd);
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.ch_version_table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--background-fill-primary, white);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.ch_version_table thead {
+    background: var(--background-fill-secondary, #f0f0f0);
+}
+
+.ch_version_table th {
+    padding: 12px 10px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color-primary, #ddd);
+    color: var(--body-text-color);
+}
+
+.ch_version_table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color-primary, #eee);
+    vertical-align: middle;
+    color: var(--body-text-color);
+}
+
+.ch_version_table tbody tr:hover {
+    background: var(--background-fill-secondary, #f5f5f5);
+}
+
+.ch_version_table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ch_ver_img {
+    width: 100px;
+    text-align: center;
+}
+
+.ch_ver_img img {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid var(--border-color-primary, #ddd);
+}
+
+.ch_ver_model_name {
+    font-weight: 500;
+    max-width: 200px;
+}
+
+.ch_ver_model_name a {
+    color: var(--link-text-color, #0066cc);
+    text-decoration: none;
+}
+
+.ch_ver_model_name a:hover {
+    text-decoration: underline;
+}
+
+.ch_ver_current {
+    max-width: 150px;
+    word-wrap: break-word;
+}
+
+.ch_ver_new {
+    max-width: 150px;
+    word-wrap: break-word;
+    font-weight: 500;
+    color: var(--link-text-color, #0066cc);
+}
+
+.ch_ver_base {
+    max-width: 100px;
+}
+
+.ch_ver_path {
+    font-family: monospace;
+    font-size: 0.9em;
+    max-width: 250px;
+    word-wrap: break-word;
+    color: var(--body-text-color-subdued, #666);
+}
+
+.ch_ver_actions {
+    text-align: center;
+    width: 150px;
+}
+
+.ch_download_btn, .ch_replace_btn {
+    display: inline-block;
+    padding: 6px 10px;
+    margin: 2px;
+    border-radius: 4px;
+    text-decoration: none !important;
+    font-size: 0.85em;
+    transition: background 0.2s;
+}
+
+.ch_download_btn {
+    background: var(--button-primary-background-fill, #0066cc);
+    color: white !important;
+}
+
+.ch_download_btn:hover {
+    background: var(--button-primary-background-fill-hover, #0052a3);
+    text-decoration: none !important;
+}
+
+.ch_replace_btn {
+    background: var(--button-secondary-background-fill, #ff8800);
+    color: white !important;
+}
+
+.ch_replace_btn:hover {
+    background: var(--button-secondary-background-fill-hover, #e67700);
+    text-decoration: none !important;
+}
+
 /* Civitai Helper Browser */
 /* Perhaps figure out a less hacky way to write this... */
 #ch_search {

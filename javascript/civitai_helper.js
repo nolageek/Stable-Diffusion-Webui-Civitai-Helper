@@ -505,6 +505,48 @@ window.ch_dl_model_new_version = function(e, model_path, version_id, download_ur
 };
 
 
+// replace model with new version (download new, delete old)
+window.ch_replace_model_version = function(e, model_path, version_id, download_url, model_type) {
+    console.log("start ch_replace_model_version");
+
+    // stop parent event
+    stopEvent(e);
+
+    // must confirm before replacing
+    const replace_confirm = "\nConfirm to REPLACE this model:\n\n" +
+        "1. Download the new version\n" +
+        "2. DELETE the old version and all its files\n\n" +
+        "This action CANNOT be undone!\n\n" +
+        "Check Download Model Section's log for details.";
+    if (!confirm(replace_confirm)) {
+        return;
+    }
+
+    //get hidden components of extension
+    const js_replace_model_version_btn = gradioApp().getElementById("ch_js_replace_model_version_btn");
+    if (!js_replace_model_version_btn) {
+        return;
+    }
+
+    //msg to python side
+    const msg = {
+        action: "replace_model_version",
+        model_path: model_path,
+        version_id: version_id,
+        download_url: download_url,
+        model_type: model_type
+    };
+
+    // fill to msg box
+    send_ch_py_msg(msg);
+
+    //click hidden button
+    js_replace_model_version_btn.click();
+
+    console.log("end ch_replace_model_version");
+};
+
+
 // download model from browser
 window.ch_downloader = function(e, model_id) {
     // This isn't the best way to handle this.

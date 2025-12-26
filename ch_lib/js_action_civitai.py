@@ -259,6 +259,133 @@ def dl_model_new_version(msg):
     yield output
 
 
+def replace_model_version(msg):
+    """
+    Download model's new version and delete the old version after confirmation.
+    This is like dl_model_new_version but also removes the old model files.
+
+    return: output:str
+    """
+    util.printD("Start replace_model_version")
+
+    max_size_preview = util.get_opts("ch_max_size_preview")
+    nsfw_preview_threshold = util.get_opts("ch_nsfw_threshold")
+
+    result = msg_handler.parse_js_msg(msg)
+    if not result:
+        output = "Parsing js msg failed"
+        util.printD(output)
+        yield output
+        return
+
+    old_model_path = result["model_path"]
+    version_id = result["version_id"]
+    download_url = result["download_url"]
+    model_type = result["model_type"]
+
+    # check data
+    if not (old_model_path and version_id and download_url):
+        output = util.indented_msg(f"""
+            Missing parameter:
+            {old_model_path=}
+            {version_id=}
+            {download_url=}
+        """)
+        util.printD(output)
+        yield output
+        return
+
+    util.printD(f"old_model_path: {old_model_path}")
+    util.printD(f"version_id: {version_id}")
+    util.printD(f"download_url: {download_url}")
+
+    if not os.path.isfile(old_model_path):
+        output = f"old_model_path is not a file: {old_model_path}"
+        util.printD(output)
+        yield output
+        return
+
+    # Get list of old model files before download
+    old_model_files = model.get_model_files_from_model_path(old_model_path)
+    util.printD(f"Old model files to be deleted: {old_model_files}")
+
+    # get model folder from model path
+    model_folder = os.path.dirname(old_model_path)
+
+    success = False
+    new_model_path = None
+
+    # download file + webui visible progress bar
+    headers = {
+        "content-type": "application/json"
+    }
+    api_key = util.get_opts("ch_civiai_api_key")
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    yield "Downloading new version..."
+
+    for result in downloader.dl_file(download_url, folder=model_folder, headers=headers):
+        if not isinstance(result, str):
+            success, new_model_path = result
+            break
+
+        yield result
+
+    if not success:
+        util.printD(new_model_path)
+        yield "Model download failed. Old model NOT deleted. See console for more details."
+        return
+
+    # get version info
+    version_info = civitai.get_version_info_by_version_id(version_id)
+
+    # now write version info to files
+    model.process_model_info(new_model_path, version_info, model_type)
+
+    # then, get preview image
+    yield "Downloading preview images..."
+    for result in civitai.get_preview_image_by_model_path(
+        new_model_path,
+        max_size_preview,
+        nsfw_preview_threshold
+    ):
+        yield result
+
+    # Download succeeded, now delete old model files
+    yield "New version downloaded successfully. Deleting old version..."
+
+    deleted_files = []
+    failed_deletes = []
+
+    for old_file in old_model_files:
+        try:
+            if os.path.isfile(old_file):
+                util.printD(f"* Removing old file: {old_file}")
+                os.remove(old_file)
+                deleted_files.append(old_file)
+        except Exception as e:
+            util.printD(f"Failed to delete {old_file}: {e}")
+            failed_deletes.append(old_file)
+
+    output_lines = [f"✅ Successfully replaced model!"]
+    output_lines.append(f"New version downloaded to: {new_model_path}")
+    output_lines.append(f"")
+    output_lines.append(f"Deleted {len(deleted_files)} old files:")
+    for f in deleted_files:
+        output_lines.append(f"  - {os.path.basename(f)}")
+
+    if failed_deletes:
+        output_lines.append(f"")
+        output_lines.append(f"⚠️ Failed to delete {len(failed_deletes)} files:")
+        for f in failed_deletes:
+            output_lines.append(f"  - {os.path.basename(f)}")
+
+    output = "\n".join(output_lines)
+    util.printD(output)
+    yield output
+
+
 def get_model_path_from_js_msg(result):
     """
     Gets a model path based on the webui js_msg.

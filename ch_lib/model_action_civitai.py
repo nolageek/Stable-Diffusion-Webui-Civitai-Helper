@@ -4,6 +4,7 @@ handle msg between js and python side
 import os
 import time
 import re
+import html
 import gradio as gr
 from modules import sd_models
 from . import util
@@ -319,16 +320,79 @@ def get_model_info_by_input(
     yield output
 
 
-def build_article_from_version(version):
+def shorten_path_from_models(full_path):
+    """ Shortens path to show only from 'models' directory onwards """
+    normalized_path = full_path.replace('\\', '/')
+
+    if '/models/' in normalized_path.lower():
+        parts = normalized_path.split('/')
+        try:
+            models_idx = next(i for i, part in enumerate(parts) if part.lower() == 'models')
+            short_path = '/'.join(parts[models_idx + 1:])
+            return short_path if short_path else full_path
+        except StopIteration:
+            return full_path
+
+    return full_path
+
+
+def build_version_table_row(version):
     """
-    Builds the HTML for displaying new model versions to the user.
+    Builds a table row for displaying new model version information.
 
     return: html:str
     """
     (
         model_path, model_id, model_name, new_version_id,
         new_version_name, description, download_url,
-        img_url, model_type
+        img_url, model_type, current_version_name, new_base_model
+    ) = version
+
+    # Preview image
+    preview_img = ""
+    if img_url:
+        preview_img = templates.version_check_table_preview.substitute(
+            img_url=img_url
+        )
+
+    # Prepare paths
+    full_path = model_path
+    short_path = shorten_path_from_models(full_path)
+    model_path_escaped = model_path.replace('\\', '\\\\').replace("'", "\\'")
+
+    # Model URL
+    model_url = f'{civitai.URLS["modelPage"]}{model_id}'
+
+    # Build the row
+    row = templates.version_check_table_row.substitute(
+        preview_img=preview_img,
+        model_url=model_url,
+        model_name=html.escape(model_name),
+        current_version=html.escape(current_version_name),
+        new_version=html.escape(new_version_name),
+        base_model=html.escape(new_base_model),
+        full_path=html.escape(full_path),
+        short_path=html.escape(short_path),
+        model_path_escaped=model_path_escaped,
+        new_version_id=new_version_id,
+        download_url=download_url,
+        model_type=model_type
+    )
+
+    return row
+
+
+def build_article_from_version(version):
+    """
+    Builds the HTML for displaying new model versions to the user.
+    (Legacy function for backward compatibility)
+
+    return: html:str
+    """
+    (
+        model_path, model_id, model_name, new_version_id,
+        new_version_name, description, download_url,
+        img_url, model_type, current_version_name, new_base_model
     ) = version
 
     thumbnail = ""
@@ -383,20 +447,43 @@ def check_models_new_version_to_md(model_types:list) -> str:
         util.printD("Done: no new versions found.")
         return "No models have new versions"
 
-    articles = []
-    count = 0
-    for index, new_version in enumerate(new_versions):
-        article = build_article_from_version(new_version)
-        articles.append(article)
+    # Group versions by model type
+    versions_by_type = {}
+    for version in new_versions:
+        model_type = version[-3]  # model_type is third from end in tuple
+        if model_type not in versions_by_type:
+            versions_by_type[model_type] = []
+        versions_by_type[model_type].append(version)
 
-    output = f"Found new versions for following models: <section>{''.join(articles)}</section>"
+    # Build tables for each model type
+    sections = []
+    total_count = 0
 
-    count = index + 1
+    for model_type, versions in versions_by_type.items():
+        rows = []
+        for version in versions:
+            row = build_version_table_row(version)
+            rows.append(row)
+            total_count += 1
 
-    if count != 1:
-        util.printD(f"Done. Found {count} models that have new versions. Check UI for detail")
+        # Create table wrapper
+        table = templates.version_check_table_wrapper.substitute(
+            rows="".join(rows)
+        )
+
+        # Create section
+        section = templates.version_check_section.substitute(
+            section_name=model_type.upper(),
+            contents=table
+        )
+        sections.append(section)
+
+    output = "".join(sections)
+
+    if total_count != 1:
+        util.printD(f"Done. Found {total_count} models that have new versions. Check UI for detail")
     else:
-        util.printD(f"Done. Found {count} model that has a new version. Check UI for detail.")
+        util.printD(f"Done. Found {total_count} model that has a new version. Check UI for detail.")
 
     return output
 

@@ -140,3 +140,57 @@ duplicate_table_section = Template(util.dedent("""
         $contents
     </div>
 """).strip())
+
+# New version check table templates
+version_check_table_wrapper = Template(util.dedent("""
+    <div class="ch_version_table_wrapper">
+        <table class="ch_version_table">
+            <thead>
+                <tr>
+                    <th>Preview</th>
+                    <th>Model Name</th>
+                    <th>Current Version</th>
+                    <th>New Version</th>
+                    <th>Base Model</th>
+                    <th>Current Path</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                $rows
+            </tbody>
+        </table>
+    </div>
+""").strip())
+
+version_check_table_row = Template(util.dedent("""
+    <tr>
+        <td class="ch_ver_img">$preview_img</td>
+        <td class="ch_ver_model_name">
+            <a href="$model_url" target="_blank">$model_name</a>
+        </td>
+        <td class="ch_ver_current">$current_version</td>
+        <td class="ch_ver_new">$new_version</td>
+        <td class="ch_ver_base">$base_model</td>
+        <td class="ch_ver_path" title="$full_path">$short_path</td>
+        <td class="ch_ver_actions">
+            <a href='#' class="ch_download_btn" onclick="ch_dl_model_new_version(event, '$model_path_escaped', '$new_version_id', '$download_url', '$model_type')" title="Download new version to same folder">
+                ⬇️ Download
+            </a>
+            <a href='#' class="ch_replace_btn" onclick="ch_replace_model_version(event, '$model_path_escaped', '$new_version_id', '$download_url', '$model_type')" title="Download new version and delete old version after confirmation">
+                🔄 Replace
+            </a>
+        </td>
+    </tr>
+""").strip())
+
+version_check_table_preview = Template(util.dedent("""
+    <img src="$img_url" loading="lazy">
+""").strip())
+
+version_check_section = Template(util.dedent("""
+    <div class="ch_version_section">
+        <h1>$section_name</h1>
+        $contents
+    </div>
+""").strip())

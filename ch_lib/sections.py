@@ -1082,3 +1082,17 @@ def check_new_versions_section(js_msg_txtbox):
         ],
         outputs=dl_new_version_log_md
     )
+
+    js_replace_model_version_btn = gr.Button(
+        value="Replace Model with new version",
+        visible=False,
+        elem_id="ch_js_replace_model_version_btn"
+    )
+
+    js_replace_model_version_btn.click(
+        js_action_civitai.replace_model_version,
+        inputs=[
+            js_msg_txtbox
+        ],
+        outputs=dl_new_version_log_md
+    )

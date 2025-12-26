@@ -607,8 +607,9 @@ def check_model_new_version_by_path(model_path: str, delay: float = 0.2) -> tupl
     """
     check new version for a model by model path
     return (
-        model_path, model_id, model_name, new_verion_id,
-        new_version_name, description, download_url, img_url
+        model_path, model_id, model_name, new_version_id,
+        new_version_name, description, download_url, img_url,
+        current_version_name, new_base_model
     )
     """
 
@@ -621,6 +622,12 @@ def check_model_new_version_by_path(model_path: str, delay: float = 0.2) -> tupl
         return None
 
     model_id, local_version_id = result
+
+    # Load local model info to get current version details
+    base, _ = os.path.splitext(model_path)
+    info_file = f"{base}{SUFFIX}{model.CIVITAI_EXT}"
+    local_model_info = model.load_model_info(info_file)
+    current_version_name = local_model_info.get("name", "N/A")
 
     # get model info by id from civitai
     model_info = get_model_info_by_id(model_id)
@@ -650,6 +657,7 @@ def check_model_new_version_by_path(model_path: str, delay: float = 0.2) -> tupl
     new_version_name = current_version.get("name", "")
     description = current_version.get("description", "")
     download_url = current_version.get("downloadUrl", "")
+    new_base_model = current_version.get("baseModel", "N/A")
 
     # get 1 preview image
     try:
@@ -659,7 +667,8 @@ def check_model_new_version_by_path(model_path: str, delay: float = 0.2) -> tupl
 
     return (
         model_path, model_id, model_name, current_version_id,
-        new_version_name, description, download_url, img_url
+        new_version_name, description, download_url, img_url,
+        current_version_name, new_base_model
     )
 
 
