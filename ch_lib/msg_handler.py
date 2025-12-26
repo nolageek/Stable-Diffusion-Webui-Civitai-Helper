@@ -10,6 +10,7 @@ JS_ACTIONS = (
     "add_trigger_words",
     "use_preview_prompt",
     "dl_model_new_version",
+    "replace_model_version",
     "rename_card",
     "remove_card"
 )
