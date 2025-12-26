@@ -218,7 +218,8 @@ def make_search_term(model_type, model_path, sha256):
     subpath = model_path[len(folder):]
     sha256 = sha256.lower()
 
-    if not subpath.startswith("/"):
+    # Check for both forward slash and backslash (Unix and Windows)
+    if not subpath.startswith(("/", "\\")):
         subpath = f"/{subpath}"
 
     if model_type == "hyper":
