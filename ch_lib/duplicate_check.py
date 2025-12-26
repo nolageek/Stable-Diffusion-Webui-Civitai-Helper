@@ -13,12 +13,13 @@ from . import civitai
 from . import templates
 
 
-def scan_for_dups(scan_model_types, cached_hash, progress=gr.Progress()):
+def scan_for_dups(scan_model_types, cached_hash, version_as_dup=False, progress=gr.Progress()):
     """ Scans model metadata to detect duplicates
-        by using the model hash.
+        by using the model hash or model version.
     """
 
     util.printD("Start scan_for_dups")
+    util.printD(f"version_as_dup: {version_as_dup}")
     output = ""
 
     # check model types
@@ -42,9 +43,9 @@ def scan_for_dups(scan_model_types, cached_hash, progress=gr.Progress()):
             progress(percent, desc=status)
     models = result
 
-    dups = check_for_dups(models)
+    dups = check_for_dups(models, version_as_dup)
 
-    output = create_dups_html(dups)
+    output = create_dups_html(dups, version_as_dup)
 
     return f"<section class=extra-network-cards>{output}</section>"
 
@@ -143,6 +144,7 @@ def parse_metadata(model_folder, root, filename, suffix, model_type, cached_hash
     # Extract version and base model info
     version = "N/A"
     base_model = "N/A"
+    model_id = None
 
     try:
         version = model_info.get("name", "N/A")
@@ -151,6 +153,15 @@ def parse_metadata(model_folder, root, filename, suffix, model_type, cached_hash
 
     try:
         base_model = model_info.get("baseModel", "N/A")
+    except (ValueError, KeyError):
+        pass
+
+    # Extract model_id for version-based duplicate detection
+    try:
+        model_id = model_info.get("modelId", None)
+        if not model_id:
+            # Try alternate location
+            model_id = model_info["model"].get("id", None)
     except (ValueError, KeyError):
         pass
 
@@ -164,7 +175,8 @@ def parse_metadata(model_folder, root, filename, suffix, model_type, cached_hash
         "hash": sha256,
         "search_term": make_search_term(model_type, model_path, sha256),
         "version": version,
-        "base_model": base_model
+        "base_model": base_model,
+        "model_id": model_id
     }
 
     yield metadata
@@ -232,10 +244,11 @@ def make_search_term(model_type, model_path, sha256):
     return f"{subpath} {sha256}"
 
 
-def check_for_dups(models):
+def check_for_dups(models, version_as_dup=False):
     """
         returns all models that share the a stored
-        sha256 hash with another model
+        sha256 hash with another model, or models that
+        share the same model_id (multiple versions)
     """
 
     scanned = {}
@@ -245,17 +258,21 @@ def check_for_dups(models):
         scanned[model_type] = {}
         scanned_type = scanned[model_type]
         for model_data in models_of_type:
-            sha256 = model_data["hash"]
+            # Group by model_id if version_as_dup is enabled, otherwise by hash
+            if version_as_dup and model_data.get("model_id"):
+                group_key = f"model_{model_data['model_id']}"
+            else:
+                group_key = model_data["hash"]
 
             if model_type == "lycoris":
                 if is_lycoris_lora(model_data, scanned):
                     continue
 
-            if not scanned_type.get(sha256, None):
-                scanned_type[sha256] = [model_data]
+            if not scanned_type.get(group_key, None):
+                scanned_type[group_key] = [model_data]
                 continue
 
-            scanned_type[sha256].append(model_data)
+            scanned_type[group_key].append(model_data)
 
     for model_type, models_of_type in scanned.items():
         dups_of_type = dups[model_type] = {}
@@ -382,7 +399,7 @@ def get_preview_path(model_path):
     return None
 
 
-def create_dups_html(dups):
+def create_dups_html(dups, version_as_dup=False):
     """ creates an HTML snippet containing duplicate models in table format """
 
     section_t = templates.duplicate_table_section
@@ -392,7 +409,7 @@ def create_dups_html(dups):
 
     for model_type, models_of_type in dups.items():
         tables = []
-        for dup_data in models_of_type.values():
+        for group_key, dup_data in models_of_type.items():
             civitai_name = ""
             sha256 = ""
 
@@ -407,18 +424,32 @@ def create_dups_html(dups):
                     sha256 = model_data["hash"]
 
             # Create table for this duplicate group
-            table = table_wrapper_t.substitute(
-                civitai_name=civitai_name,
-                hash=sha256,
-                rows="".join(rows)
-            )
+            # Show different header based on duplicate type
+            if version_as_dup and group_key.startswith("model_"):
+                # Version-based duplicates - show model_id
+                model_id = group_key.replace("model_", "")
+                table = table_wrapper_t.substitute(
+                    civitai_name=f"{civitai_name} - Multiple Versions",
+                    hash=f"Model ID: {model_id}",
+                    rows="".join(rows)
+                )
+            else:
+                # Hash-based duplicates - show hash
+                table = table_wrapper_t.substitute(
+                    civitai_name=civitai_name,
+                    hash=sha256,
+                    rows="".join(rows)
+                )
             tables.append(table)
 
         content = ""
         if len(tables) > 0:
             content = "".join(tables)
         else:
-            content = f"<p>No duplicate {model_type}s found!</p>"
+            if version_as_dup:
+                content = f"<p>No duplicate {model_type}s or multiple versions found!</p>"
+            else:
+                content = f"<p>No duplicate {model_type}s found!</p>"
 
         sections.append(
             section_t.substitute(
@@ -428,6 +459,8 @@ def create_dups_html(dups):
         )
 
     if len(sections) < 1:
+        if version_as_dup:
+            return "<p>Found no duplicate models or multiple versions!</p>"
         return "<p>Found no duplicate models!</p>"
 
     return "".join(sections)

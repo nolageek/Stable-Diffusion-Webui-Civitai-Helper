@@ -41,7 +41,7 @@ def scan_models_section():
 
         with gr.Column():
             scan_model_civitai_btn = gr.Button(
-                value="Scan",
+                value="Scan Models",
                 variant="primary",
                 elem_id="ch_scan_model_civitai_btn"
             )
@@ -1011,9 +1011,16 @@ def scan_for_duplicates_section():
                     value=False,
                     elem_id="ch_cached_hash_ckb"
                 )
+        with gr.Row():
+            with gr.Column(scale=2):
+                version_as_dup_ckb = gr.Checkbox(
+                    label="Consider multiple versions as duplicates (Groups different versions of the same model)",
+                    value=False,
+                    elem_id="ch_version_as_dup_ckb"
+                )
             with gr.Column():
                 scan_dup_model_btn = gr.Button(
-                    value="Scan",
+                    value="Scan For Duplicates",
                     variant="primary",
                     elem_id="ch_scan_dup_model_civitai_btn"
                 )
@@ -1029,7 +1036,8 @@ def scan_for_duplicates_section():
         duplicate_check.scan_for_dups,
         inputs=[
             scan_dup_model_types_drop,
-            cached_hash_ckb
+            cached_hash_ckb,
+            version_as_dup_ckb
         ],
         outputs=scan_dup_model_log_md
     )
