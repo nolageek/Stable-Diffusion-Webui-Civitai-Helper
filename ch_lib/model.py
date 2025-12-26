@@ -570,7 +570,8 @@ def get_model_path_by_search_term(model_type, search_term):
     if model_type == "hyper":
         model_sub_path = f"{search_term}.pt"
 
-    if model_sub_path[:1] == "/":
+    # Strip leading slash or backslash (handles both Unix and Windows paths)
+    if model_sub_path[:1] in ("/", "\\"):
         model_sub_path = model_sub_path[1:]
 
     if model_type == "lora" and folders['lycoris']:
