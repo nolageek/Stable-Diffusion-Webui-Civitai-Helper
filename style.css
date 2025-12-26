@@ -23,7 +23,9 @@ blockquote ol {
 
 #tab_civitai_helper .extra-network-cards {
     min-height: 0;
-    max-height: 50vh;
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .card-button {
@@ -123,6 +125,106 @@ blockquote ol {
 }
 
 /* end of Lobe theme */
+
+/* Scan results styling */
+#ch_scan_dup_model_log_md {
+    overflow-y: auto;
+    max-height: 70vh;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid var(--border-color-primary);
+    border-radius: 8px;
+}
+
+#ch_scan_dup_model_log_md section {
+    display: block;
+    width: 100%;
+}
+
+#ch_scan_dup_model_log_md article {
+    margin-bottom: 20px;
+}
+
+#ch_scan_dup_model_log_md .duplicate_model {
+    margin-bottom: 15px;
+}
+
+#ch_scan_dup_model_log_md .card {
+    max-width: 200px;
+}
+
+#ch_scan_dup_model_log_md .card img.preview {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+}
+
+#ch_scan_dup_model_log_md .civitai_name {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    clear: both;
+}
+
+#ch_scan_dup_model_log_md h1 {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-color-primary);
+}
+
+#ch_scan_dup_model_log_md h2 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+/* New version check results styling */
+#check_models_new_version_log_md {
+    overflow-y: auto;
+    max-height: 70vh;
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid var(--border-color-primary);
+    border-radius: 8px;
+}
+
+#check_models_new_version_log_md section {
+    display: block;
+    clear: both;
+    overflow: auto;
+}
+
+#check_models_new_version_log_md section article {
+    margin-bottom: 15px;
+    clear: both;
+}
+
+#check_models_new_version_log_md section article img {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+#tab_civitai_helper section {
+    display: block;
+    clear: both;
+    overflow: auto;
+    margin-top: 10px;
+}
+
+#tab_civitai_helper section article {
+    margin-bottom: 15px;
+    clear: both;
+}
+
+#tab_civitai_helper section article img {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+.ch_vpadding section {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 10px;
+}
 
 /* Civitai Helper Browser */
 /* Perhaps figure out a less hacky way to write this... */

@@ -6,7 +6,7 @@ from string import Template
 from . import util
 
 article = Template(util.dedent("""
-    <article style="margin: 5px; clear: both;">
+    <article style="margin: 5px; clear: both; overflow: auto; padding: 10px; border: 1px solid var(--border-color-primary, #ccc); border-radius: 8px; background: var(--background-fill-secondary, #f5f5f5);">
         $thumbnail
         <div style="font-size:16px">
             File: $model_path
@@ -19,7 +19,7 @@ article = Template(util.dedent("""
 """).strip())
 
 thumbnail = Template(util.dedent("""
-    <img src='$img_url' style='float: left; margin: 5px;'>
+    <img src='$img_url' style='float: left; margin: 5px; max-width: 200px; max-height: 200px; object-fit: contain;'>
 """).strip())
 
 description = Template(util.dedent("""
