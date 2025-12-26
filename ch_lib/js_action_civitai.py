@@ -496,20 +496,45 @@ def remove_model_by_path(msg):
 
     if model_path is None:
         output = "Could not remove model."
+        util.error(output)
         return output
 
-    # all files need to be renamed
+    # all files need to be deleted
     model_files = model.get_model_files_from_model_path(model_path)
 
-    removed = []
-    for candidate_file in model_files:
-        util.printD(f"* Removing file {candidate_file}")
-        removed.append(candidate_file)
-        os.remove(candidate_file)
+    if not model_files:
+        output = "No files found to remove."
+        util.error(output)
+        return output
 
-    removed = "\n".join(removed)
-    status = f"The following files were removed: \n{removed}"
-    util.info(status)
+    removed = []
+    failed = []
+
+    for candidate_file in model_files:
+        try:
+            util.printD(f"* Removing file {candidate_file}")
+            os.remove(candidate_file)
+            removed.append(candidate_file)
+        except Exception as e:
+            util.printD(f"Failed to remove {candidate_file}: {e}")
+            failed.append(candidate_file)
+
+    if removed:
+        removed_str = "\n".join(removed)
+        status = f"The following files were removed: \n{removed_str}"
+        util.info(status)
+
+    if failed:
+        failed_str = "\n".join(failed)
+        util.error(f"Failed to remove: \n{failed_str}")
+
+    # Return "Done" on success so JavaScript knows deletion worked
+    if removed and not failed:
+        output = "Done"
+    elif removed and failed:
+        output = "Partial - some files could not be removed"
+    else:
+        output = "Failed to remove files"
 
     util.printD("End remove_model_by_path")
     return output
