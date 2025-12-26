@@ -92,3 +92,51 @@ duplicate_column = Template(util.dedent("""
             $card
         </div>
 """).strip())
+
+# New table-based templates for duplicate scan
+duplicate_table_wrapper = Template(util.dedent("""
+    <div class="ch_dup_table_wrapper">
+        <h2>$civitai_name <span class="ch_hash_label">(Hash: $hash)</span></h2>
+        <table class="ch_dup_table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Version</th>
+                    <th>Base Model</th>
+                    <th>Path</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                $rows
+            </tbody>
+        </table>
+    </div>
+""").strip())
+
+duplicate_table_row = Template(util.dedent("""
+    <tr>
+        <td class="ch_dup_img">$preview_img</td>
+        <td class="ch_dup_name">$model_name</td>
+        <td class="ch_dup_version">$version</td>
+        <td class="ch_dup_base">$base_model</td>
+        <td class="ch_dup_path" title="$full_path">$short_path</td>
+        <td class="ch_dup_actions">
+            <a href='#' class="ch_delete_btn" onclick="remove_dup_card(event, '$model_type', '$search_term')" title="Delete model and all associated files">
+                🗑️ Delete
+            </a>
+        </td>
+    </tr>
+""").strip())
+
+duplicate_table_preview = Template(util.dedent("""
+    <img src="./sd_extra_networks/thumb?filename=$bg_image" loading="lazy">
+""").strip())
+
+duplicate_table_section = Template(util.dedent("""
+    <div class="ch_dup_section">
+        <h1>$section_name</h1>
+        $contents
+    </div>
+""").strip())

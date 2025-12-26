@@ -140,6 +140,20 @@ def parse_metadata(model_folder, root, filename, suffix, model_type, cached_hash
         yield result
     sha256 = result
 
+    # Extract version and base model info
+    version = "N/A"
+    base_model = "N/A"
+
+    try:
+        version = model_info.get("name", "N/A")
+    except (ValueError, KeyError):
+        pass
+
+    try:
+        base_model = model_info.get("baseModel", "N/A")
+    except (ValueError, KeyError):
+        pass
+
     metadata = {
         "model_name": model_name,
         "civitai_name": model_info["model"]["name"],
@@ -148,7 +162,9 @@ def parse_metadata(model_folder, root, filename, suffix, model_type, cached_hash
         "subpath": model_path[len(model_folder):],
         "model_type": model_type,
         "hash": sha256,
-        "search_term": make_search_term(model_type, model_path, sha256)
+        "search_term": make_search_term(model_type, model_path, sha256),
+        "version": version,
+        "base_model": base_model
     }
 
     yield metadata
@@ -268,6 +284,26 @@ def get_preview(model_path):
     )
 
 
+def shorten_path(full_path):
+    """ Shortens path to show only from 'models' directory onwards """
+    # Normalize path separators
+    normalized_path = full_path.replace('\\', '/')
+
+    # Find 'models' in the path and return everything after it
+    if '/models/' in normalized_path.lower():
+        parts = normalized_path.split('/')
+        try:
+            # Find the index of 'models' (case-insensitive)
+            models_idx = next(i for i, part in enumerate(parts) if part.lower() == 'models')
+            # Return everything after 'models'
+            short_path = '/'.join(parts[models_idx + 1:])
+            return short_path if short_path else full_path
+        except StopIteration:
+            return full_path
+
+    return full_path
+
+
 def make_model_card(model_data):
     """ Creates the HTML for a single model card """
 
@@ -296,61 +332,102 @@ def make_model_card(model_data):
     return card
 
 
+def make_model_table_row(model_data):
+    """ Creates the HTML for a single table row """
+
+    row_t = templates.duplicate_table_row
+
+    # Get preview image
+    preview_img = ""
+    bg_image_path = get_preview_path(model_data["model_path"])
+    if bg_image_path:
+        preview_img = templates.duplicate_table_preview.substitute(
+            bg_image=bg_image_path
+        )
+
+    model_name = html.escape(model_data["model_name"])
+    full_path = model_data["model_path"]
+    short_path = shorten_path(full_path)
+    search_term = model_data["search_term"].replace("'", "\\'")
+    model_type = model_data["model_type"]
+    version = html.escape(model_data.get("version", "N/A"))
+    base_model = html.escape(model_data.get("base_model", "N/A"))
+
+    row = row_t.substitute(
+        preview_img=preview_img,
+        model_name=model_name,
+        version=version,
+        base_model=base_model,
+        full_path=html.escape(full_path),
+        short_path=html.escape(short_path),
+        search_term=search_term,
+        model_type=model_type
+    )
+
+    return row
+
+
+def get_preview_path(model_path):
+    """ Finds the appropriate preview image path for a model """
+
+    prevs = model.get_potential_model_preview_files(model_path, True)
+
+    for prev in prevs:
+        if os.path.isfile(prev):
+            return prev
+
+    return None
+
+
 def create_dups_html(dups):
-    """ creates an HTML snippet containing duplicate models """
+    """ creates an HTML snippet containing duplicate models in table format """
 
-    article_t = templates.duplicate_article
-    row_t = templates.duplicate_row
-    column_t = templates.duplicate_column
+    section_t = templates.duplicate_table_section
+    table_wrapper_t = templates.duplicate_table_wrapper
 
-    articles = []
+    sections = []
 
     for model_type, models_of_type in dups.items():
-        rows = []
+        tables = []
         for dup_data in models_of_type.values():
             civitai_name = ""
             sha256 = ""
 
-            columns = []
-            for count, model_data in enumerate(dup_data):
-                card = make_model_card(model_data)
-
-                column = column_t.substitute(
-                    count=count,
-                    card=card
-                )
-
-                columns.append(column)
+            rows = []
+            for model_data in enumerate(dup_data):
+                _, model_data = model_data
+                row = make_model_table_row(model_data)
+                rows.append(row)
 
                 if model_data["civitai_name"] and not civitai_name:
-                    civitai_name = model_data["civitai_name"]
+                    civitai_name = html.escape(model_data["civitai_name"])
                     sha256 = model_data["hash"]
 
-            rows.append(
-                row_t.substitute(
-                    civitai_name=civitai_name,
-                    hash=sha256,
-                    columns="".join(columns)
-                )
+            # Create table for this duplicate group
+            table = table_wrapper_t.substitute(
+                civitai_name=civitai_name,
+                hash=sha256,
+                rows="".join(rows)
             )
+            tables.append(table)
 
         content = ""
-        if len(rows) > 0:
-            content = "".join(rows)
+        if len(tables) > 0:
+            content = "".join(tables)
         else:
-            content = f"No duplicate {model_type}s found!"
+            content = f"<p>No duplicate {model_type}s found!</p>"
 
-        articles.append(
-            article_t.substitute(
-                section_name=model_type,
+        sections.append(
+            section_t.substitute(
+                section_name=model_type.upper(),
                 contents=content
             )
         )
 
-    if len(articles) < 1:
-        return "Found no duplicate models!"
+    if len(sections) < 1:
+        return "<p>Found no duplicate models!</p>"
 
-    return "".join(articles)
+    return "".join(sections)
 
 
 def is_lycoris_lora(lyco, models):

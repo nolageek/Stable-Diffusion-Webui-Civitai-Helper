@@ -284,19 +284,42 @@ window.remove_dup_card = async function(e, model_type, search_term) {
     let success = await remove_card(e, model_type, search_term);
 
     if (success === true) {
-        let parent = el.parentElement;
+        // Find the table row (tr) element
+        let tableRow = el.closest('tr');
 
-        let sha256 = search_term.split(" ").pop().toUpperCase();
-        let row_id = `ch_${sha256}`;
-        let cards_id = `${row_id}_cards`;
+        if (tableRow) {
+            // This is a table-based layout
+            let tbody = tableRow.parentElement;
+            let table = tbody.parentElement;
+            let tableWrapper = table.parentElement;
 
-        let cards = document.getElementById(cards_id);
+            // Remove the row
+            tbody.removeChild(tableRow);
 
-        cards.removeChild(parent);
+            // If this was the last row, remove the entire table wrapper
+            if (tbody.children.length === 0) {
+                tableWrapper.parentElement.removeChild(tableWrapper);
+            }
+        } else {
+            // Fallback to old card-based layout
+            let parent = el.parentElement;
 
-        if (cards.children.length < 2) {
-            let row = document.getElementById(row_id);
-            row.parentElement.removeChild(row);
+            let sha256 = search_term.split(" ").pop().toUpperCase();
+            let row_id = `ch_${sha256}`;
+            let cards_id = `${row_id}_cards`;
+
+            let cards = document.getElementById(cards_id);
+
+            if (cards) {
+                cards.removeChild(parent);
+
+                if (cards.children.length < 2) {
+                    let row = document.getElementById(row_id);
+                    if (row && row.parentElement) {
+                        row.parentElement.removeChild(row);
+                    }
+                }
+            }
         }
     }
 };
